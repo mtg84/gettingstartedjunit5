@@ -1,6 +1,8 @@
 package patientintake;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -10,7 +12,7 @@ import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-
+@DisplayName("ClinicCalendar should")
 class ClinicCalendarTest {
 
     private ClinicCalendar calendar;
@@ -22,6 +24,7 @@ class ClinicCalendarTest {
 
 
     @Test
+    @DisplayName("record a new appointment correctly")
     public void allowEntryofAppointment() {
 
 
@@ -48,30 +51,81 @@ class ClinicCalendarTest {
                 enteredAppt.getAppointmentDateTime().format(DateTimeFormatter.ofPattern("M/d/yyyy hh:mm a", Locale.US)));
     }
 
-    @Test
-    public void returnTrueForHasAppointmentsIfThereAreAppointments(){
+    @Nested
+    @DisplayName("indicate if there are appointments correctly")
+    class HasAppointments {
 
-        calendar.addAppointment("Jim","Weaver","avery","09/01/2020 02:00 pm");
-        assertTrue(calendar.hasAppointment(LocalDate.of(2020, 9,1)));
+        @Test
+        @DisplayName("when there are appointments")
+        public void returnTrueForHasAppointmentsIfThereAreAppointments() {
+
+            calendar.addAppointment("Jim", "Weaver", "avery", "09/01/2020 02:00 pm");
+            assertTrue(calendar.hasAppointment(LocalDate.of(2020, 9, 1)));
+        }
+
+        @Test
+        @DisplayName("when there are no appointments")
+        void returnFalseForHasAppointmentsIfThereAreNoAppointments() {
+            assertFalse(calendar.hasAppointment(LocalDate.of(2018, 9, 1)));
+        }
     }
 
-    @Test
-    public void returnFalseForHasAppointmentsIfThereAreNotAppointments(){
+    @Nested
+    @DisplayName("return appointments for a given day correctly")
+    class AppointmentsForDay {
 
-        assertFalse(calendar.hasAppointment(LocalDate.of(2020, 9,1)));
+        @Test
+        @DisplayName("for today")
+        public void returnCurrentDaysAppointment() {
+
+            calendar.addAppointment("Jim", "Weaver", "avery",
+                    "04/15/2020 2:00 pm");
+            calendar.addAppointment("Jim", "Weaver", "avery",
+                    "08/26/2018 3:00 pm");
+            calendar.addAppointment("Jim", "Weaver", "avery",
+                    "04/15/2020 3:00 pm");
+            assertEquals(2, calendar.getTodayAppointments().size());
+
+        }
+
+        @Test
+        @DisplayName("for tomorrow")
+        void returnTommorowsAppointments() {
+            calendar.addAppointment("Jim", "Weaver", "avery",
+                    "04/16/2020 2:00 pm");
+            calendar.addAppointment("Jim", "Weaver", "avery",
+                    "04/16/2020 3:00 pm");
+            calendar.addAppointment("Jim", "Weaver", "avery",
+                    "08/26/2018 3:00 pm");
+            assertEquals(2, calendar.getTomorrowAppointments().size());
+        }
+
     }
 
-    @Test
-    public void returnCurrentDaysAppointment(){
+    @Nested
+    @DisplayName("return upcoming appointments")
+    class UpcomingAppointments {
 
-        calendar.addAppointment("Jim", "Weaver", "avery",
-                "04/15/2020 2:00 pm");
-        calendar.addAppointment("Jim", "Weaver", "avery",
-                "08/26/2018 3:00 pm");
-        calendar.addAppointment("Jim", "Weaver", "avery",
-                "04/15/2020 3:00 pm");
-        assertEquals(2, calendar.getTodayAppointments().size());
+        @Test
+        @DisplayName("as empty list when there are none")
+        void whenThereAreNone() {
+            List<PatientAppointment> appointments = calendar.getUpcomingAppointments();
+            assertEquals(0, appointments.size());
+        }
 
+        @Test
+        @DisplayName("correctly when there are some in the past as well")
+        void whenThereAreSomePastAndFuture() {
+            calendar.addAppointment("Jim", "Weaver", "avery",
+                    "07/27/2017 2:00 pm");
+            calendar.addAppointment("Jim", "Weaver", "avery",
+                    "07/27/2018 2:00 pm");
+            calendar.addAppointment("Jim", "Weaver", "avery",
+                    "08/27/2020 2:00 pm");
+            assertEquals(1, calendar.getUpcomingAppointments().size());
+        }
 
     }
+
+
 }
